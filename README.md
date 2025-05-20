@@ -2,5 +2,7 @@
 ## 프로젝트 실행을 위한 환경설정
 ### 1. HCI_LAB 환경
 ### 2. pip install mediapipe 터미널에서 진행
-[안될 경우] => python -m pip install --upgrade pip
-
+※아마 우리는 Python 버전이 3.7이라서 install 안될거야
+  1. 파이썬 버전 업그레이드(3.8버전 권장)
+  2. 아니면 새로운 가상환경 만들어서 3.8~3.10 버전의 Python으로 다시 설정해주기
+**1번 아니면 2번 선택해서 오류 해결**
