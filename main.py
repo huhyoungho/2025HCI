@@ -1,3 +1,4 @@
+import cv2
 from utils.face_capture import capture_face_with_guide
 from utils.preprocessing import preprocess_image
 from utils.landmark_detection import detect_landmarks_mediapipe
