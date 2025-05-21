@@ -10,8 +10,8 @@ if __name__ == "__main__":
     img = capture_face_with_guidelines()
     modifications = get_user_modifications()
     landmarks = extract_landmarks_mediapipe(img)
-    #modified_img = apply_modification(img, landmarks, modifications)
-    canny= apply_edge_detection(img)
+    modified_img = apply_modification(img, landmarks, modifications)
+    canny= apply_edge_detection(modified_img)
     final = generate_binary_caricature(canny)
 
     cv2.imshow("Caricature Emoji", final)

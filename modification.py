@@ -18,7 +18,6 @@ SCALE_MAP = {
 }
 
 def apply_modification(img, landmarks, modifications):
-    # 1. 이미지를 흑백(Grayscale)로 변환
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     result = gray.copy()
 
