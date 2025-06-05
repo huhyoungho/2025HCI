@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 
 mp_face_mesh = mp.solutions.face_mesh
 
@@ -27,3 +28,7 @@ def extract_landmarks_mediapipe(image):
             points.append((x, y))
 
         return points  # (468개 좌표)
+
+def get_landmark_coords(landmarks, indexes, image_shape):
+    h, w, _ = image_shape
+    return np.array([[int(landmarks[i][0]), int(landmarks[i][1])] for i in indexes])
