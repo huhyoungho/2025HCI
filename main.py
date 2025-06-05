@@ -7,6 +7,7 @@ from edge_detection import apply_edge_detection
 from caricature_output import generate_binary_caricature
 from preprocessing import preprocess_image
 from edge_postprocessing import edge_postprocessing
+from cartoon import cartoon_effect
 import cv2
 import numpy as np
 
@@ -26,7 +27,8 @@ if __name__ == "__main__":
         exit()
 
     modified_img = apply_modification(preprocessed_img, landmarks, modifications)
-    canny = apply_edge_detection(modified_img)
+    cartoon_img = cartoon_effect(modified_img)
+    canny = apply_edge_detection(cartoon_img)
     #post_canny=edge_postprocessing(canny)
     final = generate_binary_caricature(canny)
 
@@ -42,6 +44,9 @@ if __name__ == "__main__":
     final = mask
 
     # 결과 출력 및 저장
+    cv2.imshow("원본 이미지", img)
+    cv2.imshow("Cartoon Image", cartoon_img)
+    cv2.imshow("Edge Detection", canny)
     cv2.imshow("Caricature Emoji", final)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
