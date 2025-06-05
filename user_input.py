@@ -4,6 +4,9 @@ def get_user_modifications():
         "코": ["nose"],
         "입": ["mouth"],
         "광대": ["left_cheek", "right_cheek"],
+        "턱": ["chin"],
+        "이마": ["forehead"],
+        "턱선": ["jaw"],
     }
 
     print("어느 부위를 수정할까요? (복수 선택, 쉼표로 구분)")
