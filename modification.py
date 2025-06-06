@@ -82,6 +82,36 @@ def warp_region_with_soft_blend(image, landmarks, indexes, scale=1.2):
 def warp_nose_with_soft_blend(image, landmarks, scale=1.6):
     return warp_region_with_soft_blend(image, landmarks, FACIAL_REGIONS["nose"], scale)
 
+def rotate_region(image, landmarks, indexes, angle):
+    # 해당 부위의 중심과 좌표 계산
+    points = np.array([landmarks[i] for i in indexes], dtype=np.int32)
+    x, y, w, h = cv2.boundingRect(points)
+    center = (x + w // 2, y + h // 2)
+
+    # ROI 추출
+    roi = image[y:y+h, x:x+w].copy()
+
+    # 회전 행렬 생성
+    M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
+    rotated_roi = cv2.warpAffine(roi, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+
+    # 마스크 생성 (부드러운 경계)
+    mask = np.zeros((h, w), dtype=np.uint8)
+    cv2.fillConvexPoly(mask, points - [x, y], 255)
+    mask = cv2.GaussianBlur(mask, (15, 15), 5)
+    mask_3ch = cv2.merge([mask]*3).astype(np.float32) / 255.0
+
+    # 원본 ROI와 회전된 ROI 블렌딩
+    roi = roi.astype(np.float32)
+    rotated_roi = rotated_roi.astype(np.float32)
+    blended = rotated_roi * mask_3ch + roi * (1 - mask_3ch)
+    blended = np.clip(blended, 0, 255).astype(np.uint8)
+
+    # 결과 이미지를 복사 후, 해당 영역에 합성
+    result = image.copy()
+    result[y:y+h, x:x+w] = blended
+    return result
+
 def apply_modification(image, landmarks, modifications):
     output = image.copy()
     for region_key, action in modifications.items():

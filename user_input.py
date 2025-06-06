@@ -22,7 +22,17 @@ def get_user_modifications():
             break
 
     modifications = {}
+    rotate_eyes = False
     for part in selected_parts:
+        if part == "눈":
+            while True:
+                rotate = input("눈을 회전시키겠습니까? (y/n): ").strip()
+                if rotate in ["y", "Y", "n", "N"]:
+                    if rotate in ["y", "Y"]:
+                        rotate_eyes = True
+                    break
+                else:
+                    print("입력 오류. 'y', 'Y', 'n', 'N' 중 하나로 입력해주세요.")
         while True:
             scale_text = input(f"{part}을(를) 크게 또는 작게 중 선택해주세요 (크게/작게): ")
             if scale_text in ["크게", "작게"]:
@@ -32,4 +42,4 @@ def get_user_modifications():
             else:
                 print("입력 오류. '크게' 또는 '작게'로 입력해주세요.")
 
-    return modifications
+    return modifications, rotate_eyes
