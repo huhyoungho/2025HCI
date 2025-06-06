@@ -16,8 +16,8 @@ def main():
 
     modifications, rotate_eyes = get_user_modifications()   # 사용자 입력 받음
     landmarks = extract_landmarks_mediapipe(img)
-    #processed_img = processing_image(img, 0.8)
-    modified_img = apply_modification(img, landmarks, modifications)
+    processed_img = processing_image(img, 0.8)
+    modified_img = apply_modification(processed_img, landmarks, modifications)
 
     # 눈 회전 적용 (사용자가 y/Y 선택 시에만)
     if rotate_eyes:
