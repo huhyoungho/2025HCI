@@ -10,8 +10,9 @@ def extract_landmarks_mediapipe(image):
     with mp_face_mesh.FaceMesh(
         static_image_mode=True,
         max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5
+        refine_landmarks=True,  # 정밀 랜드마크 추출
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5  # 트래킹 신뢰도 추가
     ) as face_mesh:
         results = face_mesh.process(rgb)
         if not results.multi_face_landmarks:
