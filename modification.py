@@ -11,11 +11,6 @@ FACIAL_REGIONS = {
     "right_cheek": [280, 347, 330, 352, 376, 433, 426, 436]
 }
 
-SCALE_MAPPING = {
-    "크게": 1.0,
-    "작게": 0.7
-}
-
 REGION_SCALE = {
     "left_eye": 1.7,
     "right_eye": 1.7,
@@ -114,25 +109,20 @@ def rotate_region(image, landmarks, indexes, angle):
 
 def apply_modification(image, landmarks, modifications):
     output = image.copy()
-    for region_key, action in modifications.items():
+    for region_key, selected in modifications.items():
+        if not selected:
+            continue
         indexes = FACIAL_REGIONS.get(region_key)
         if region_key == "볼":
             for cheek in ["left_cheek", "right_cheek"]:
                 indexes = FACIAL_REGIONS[cheek]
-                base_scale = REGION_SCALE.get(cheek, 1.0)
-                action_scale = SCALE_MAPPING.get(action, 1.0)
-                scale = base_scale * action_scale
+                scale = REGION_SCALE.get(cheek, 1.0)
                 output = warp_region_with_soft_blend(output, landmarks, indexes, scale)
             continue
-
         if indexes is None:
             print(f"[경고] '{region_key}'는 알 수 없는 부위입니다.")
             continue
-
-        base_scale = REGION_SCALE.get(region_key, 1.0)
-        action_scale = SCALE_MAPPING.get(action, 1.0)
-        scale = base_scale * action_scale
-
+        scale = REGION_SCALE.get(region_key, 1.0)
         if region_key == "nose":
             output = warp_nose_with_soft_blend(output, landmarks, scale)
         elif region_key in ["chin", "left_cheek", "right_cheek"]:
@@ -140,5 +130,4 @@ def apply_modification(image, landmarks, modifications):
         else:
             region_coords = [landmarks[i] for i in indexes]
             output = warp_region_tps(output, region_coords, scale=scale)
-
     return output

@@ -33,13 +33,8 @@ def get_user_modifications():
                     break
                 else:
                     print("입력 오류. 'y', 'Y', 'n', 'N' 중 하나로 입력해주세요.")
-        while True:
-            scale_text = input(f"{part}을(를) 크게 또는 작게 중 선택해주세요 (크게/작게): ")
-            if scale_text in ["크게", "작게"]:
-                for region_key in parts[part]:
-                    modifications[region_key] = scale_text
-                break
-            else:
-                print("입력 오류. '크게' 또는 '작게'로 입력해주세요.")
+        # scale은 region별 고정값만 사용
+        for region_key in parts[part]:
+            modifications[region_key] = True  # 선택된 부위만 True로 표시
 
     return modifications, rotate_eyes
