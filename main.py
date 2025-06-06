@@ -22,7 +22,7 @@ if __name__ == "__main__":
         print("❌ 얼굴 인식 실패:", e)
         exit()
 
-    processed_img=processing_image(img,0.9)
+    processed_img=processing_image(img,0.5)
     modified_img = apply_modification(processed_img, landmarks, modifications)
     # 만화 효과 적용
     cartooned = cartoon_effect(modified_img)

@@ -2,14 +2,13 @@ import cv2
 import numpy as np
 
 FACIAL_REGIONS = {
-    "left_eye": [33, 133, 160, 159, 158, 157, 173, 246],
-    "right_eye": [362, 263, 387, 386, 385, 384, 398, 466],
+    "left_eye": [33, 133, 160, 159, 158, 157, 173, 246, 23, 24, 110],
+    "right_eye": [362, 263, 387, 386, 385, 384, 398, 466, 443, 444, 276],
     "mouth": [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146],
-    "nose": [193, 168, 417, 122, 351, 196, 419, 3, 248, 236, 456, 198, 420, 131, 360, 49, 279, 48,
-             278, 219, 439, 59, 289, 218, 438, 237, 457, 44, 19, 274],
-    "chin": [152, 377, 400, 378, 379, 365, 397, 288],
-    "left_cheek": [50, 101, 118, 123, 147, 213],
-    "right_cheek": [280, 347, 330, 352, 376, 433]
+    "nose": [98, 327, 2, 195, 5, 4, 278, 279, 309, 456, 419, 248, 281],
+    "chin": [152, 148, 176, 149, 150, 136, 172, 397, 365, 288],
+    "left_cheek": [50, 101, 118, 123, 147, 213, 205, 206],
+    "right_cheek": [280, 347, 330, 352, 376, 433, 426, 436]
 }
 
 SCALE_MAPPING = {
@@ -18,16 +17,16 @@ SCALE_MAPPING = {
 }
 
 REGION_SCALE = {
-    "left_eye": 1.5,
-    "right_eye": 1.5,
-    "mouth": 1.2,
-    "nose": 1.5,
-    "chin": 1.0,
-    "left_cheek": 1.05,
-    "right_cheek": 1.05
+    "left_eye": 1.8,
+    "right_eye": 1.8,
+    "mouth": 1.5,
+    "nose": 1.6,  
+    "chin": 1.5,
+    "left_cheek": 1.5,
+    "right_cheek": 1.5
 }
 
-def warp_region_tps(image, src_points, scale=1.5):
+def warp_region_tps(image, src_points, scale=1.5, blur_size=15, blur_sigma=5):
     src_points = np.array(src_points, dtype=np.float32)
     center = np.mean(src_points, axis=0)
 
@@ -42,18 +41,55 @@ def warp_region_tps(image, src_points, scale=1.5):
 
     warped_image = tps.warpImage(image)
 
-    # Create mask for destination region and smooth it
+    # 마스크 생성
     mask = np.zeros(image.shape[:2], dtype=np.uint8)
     cv2.fillConvexPoly(mask, np.int32(dst_points), 255)
-    mask = cv2.GaussianBlur(mask, (31, 31), 15)
 
-    # Convert to float for blending
+    if blur_size > 0:
+        mask = cv2.GaussianBlur(mask, (blur_size, blur_size), blur_sigma)
+
     mask_3ch = cv2.merge([mask]*3).astype(np.float32) / 255.0
     warped_image = warped_image.astype(np.float32)
     image = image.astype(np.float32)
 
     blended = warped_image * mask_3ch + image * (1 - mask_3ch)
     return np.clip(blended, 0, 255).astype(np.uint8)
+
+def warp_nose_with_soft_blend(image, landmarks, scale=1.6):
+    nose_points = np.array([landmarks[i] for i in FACIAL_REGIONS["nose"]])
+    x, y, w, h = cv2.boundingRect(nose_points)
+
+    cx, cy = x + w // 2, y + h // 2
+    new_w, new_h = int(w * scale), int(h * scale)
+
+    # 원래 코 잘라냄
+    roi = image[y:y+h, x:x+w].copy()
+    resized = cv2.resize(roi, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+    new_x = cx - new_w // 2
+    new_y = cy - new_h // 2
+
+    h_img, w_img = image.shape[:2]
+    x1, y1 = max(new_x, 0), max(new_y, 0)
+    x2 = min(new_x + new_w, w_img)
+    y2 = min(new_y + new_h, h_img)
+
+    roi_blended = resized[(y1-new_y):(y2-new_y), (x1-new_x):(x2-new_x)]
+
+    # 더 넓은 fade 범위와 더 강한 블러 적용
+    mask = np.zeros((y2 - y1, x2 - x1), dtype=np.float32)
+    pad = max((y2-y1)//6, 20)  # fade 범위 넓게
+    mask[pad:-pad, pad:-pad] = 1.0
+    mask = cv2.GaussianBlur(mask, (71, 71), 35)
+    mask_3ch = cv2.merge([mask]*3)
+
+    fg = roi_blended.astype(np.float32)
+    bg = image[y1:y2, x1:x2].astype(np.float32)
+
+    blended = fg * mask_3ch + bg * (1 - mask_3ch)
+    image[y1:y2, x1:x2] = np.clip(blended, 0, 255).astype(np.uint8)
+
+    return image
 
 def apply_modification(image, landmarks, modifications):
     output = image.copy()
@@ -65,10 +101,11 @@ def apply_modification(image, landmarks, modifications):
                 action_scale = SCALE_MAPPING.get(action, 1.0)
                 scale = base_scale * action_scale
                 region_coords = [landmarks[i] for i in indexes]
-                output = warp_region_tps(output, region_coords, scale=scale)
+                output = warp_region_tps(output, region_coords, scale=scale, blur_size=9, blur_sigma=3)
             continue
 
         if region_key not in FACIAL_REGIONS:
+            print(f"[경고] '{region_key}'는 알 수 없는 부위입니다.")
             continue
 
         indexes = FACIAL_REGIONS[region_key]
@@ -76,5 +113,11 @@ def apply_modification(image, landmarks, modifications):
         action_scale = SCALE_MAPPING.get(action, 1.0)
         scale = base_scale * action_scale
         region_coords = [landmarks[i] for i in indexes]
-        output = warp_region_tps(output, region_coords, scale=scale)
+
+        if region_key == "nose":
+            output = warp_nose_with_soft_blend(output, landmarks, scale=scale)
+        elif region_key in ["left_cheek", "right_cheek", "chin"]:
+            output = warp_region_tps(output, region_coords, scale=scale, blur_size=9, blur_sigma=3)
+        else:
+            output = warp_region_tps(output, region_coords, scale=scale)
     return output
