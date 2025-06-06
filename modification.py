@@ -15,14 +15,14 @@ FACIAL_REGIONS = {
 }
 
 SCALE_MAPPING = {
-    "크게": 1.5,
+    "크게": 1.0,
     "작게": 0.7
 }
 
 # 부위별 기본 scale 값 지정
 REGION_SCALE = {
-    "left_eye": 1.3,
-    "right_eye": 1.3,
+    "left_eye": 1.5,
+    "right_eye": 1.5,
     "mouth": 1.2,
     "nose": 1.1,
     "chin": 1.0,

@@ -3,6 +3,7 @@ from user_input import get_user_modifications
 from landmark_extraction import extract_landmarks_mediapipe
 from modification import apply_modification
 from cartoon import cartoon_effect
+from processing import processing_image
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +22,8 @@ if __name__ == "__main__":
         print("❌ 얼굴 인식 실패:", e)
         exit()
 
-    modified_img = apply_modification(img, landmarks, modifications)
+    processed_img=processing_image(img,0.9)
+    modified_img = apply_modification(processed_img, landmarks, modifications)
     # 만화 효과 적용
     cartooned = cartoon_effect(modified_img)
 

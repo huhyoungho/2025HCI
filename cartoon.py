@@ -9,5 +9,6 @@ def cartoon_effect(image):
         cv2.THRESH_BINARY, 9, 10
     )
     color = cv2.bilateralFilter(image, 9, 300, 300)
-    cartoon = cv2.bitwise_and(image, image, mask=edges)
+    edges_color = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    cartoon = cv2.bitwise_and(color, edges_color)
     return cartoon

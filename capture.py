@@ -4,6 +4,8 @@ import mediapipe as mp
 def capture_face_with_guidelines():
     cap = cv2.VideoCapture(0)
     captured = None
+    mp_face_detection = mp.solutions.face_detection
+    detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
 
     while True:
         ret, frame = cap.read()
@@ -12,8 +14,6 @@ def capture_face_with_guidelines():
 
         # 안내선, 텍스트, 박스 모두 제거
         # 얼굴 검출만 수행
-        mp_face_detection = mp.solutions.face_detection
-        detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
         results = detector.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
         face_detected = False
@@ -32,4 +32,5 @@ def capture_face_with_guidelines():
 
     cap.release()
     cv2.destroyAllWindows()
+    detector.close()
     return captured
