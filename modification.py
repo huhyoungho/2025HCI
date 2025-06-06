@@ -6,9 +6,11 @@ FACIAL_REGIONS = {
     "right_eye": [362, 263, 387, 386, 385, 384, 398, 466, 443, 444, 276],
     "mouth": [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146],
     "nose": [98, 327, 2, 195, 5, 4, 278, 279, 309, 456, 419, 248, 281],
-    "chin": [152, 148, 176, 149, 150, 136, 172, 397, 365, 288],
-    "left_cheek": [50, 101, 118, 123, 147, 213, 205, 206],
-    "right_cheek": [280, 347, 330, 352, 376, 433, 426, 436]
+    "face_shape": [
+        10, 109, 67, 103, 54, 21, 162, 127, 234, 93, 132, 58, 172,
+        136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397,
+        288, 361, 323, 454, 356, 389, 251, 284, 332
+    ]
 }
 
 REGION_SCALE = {
@@ -16,9 +18,7 @@ REGION_SCALE = {
     "right_eye": 1.7,
     "mouth": 1.7,
     "nose": 1.8,
-    "chin": 1.6,
-    "left_cheek": 2.0,
-    "right_cheek": 2.0
+    "face_shape": 1.2
 }
 
 def warp_region_tps(image, src_points, scale=1.5, blur_size=15, blur_sigma=5):
@@ -78,31 +78,20 @@ def warp_nose_with_soft_blend(image, landmarks, scale=1.6):
     return warp_region_with_soft_blend(image, landmarks, FACIAL_REGIONS["nose"], scale)
 
 def rotate_region(image, landmarks, indexes, angle):
-    # 해당 부위의 중심과 좌표 계산
     points = np.array([landmarks[i] for i in indexes], dtype=np.int32)
     x, y, w, h = cv2.boundingRect(points)
     center = (x + w // 2, y + h // 2)
-
-    # ROI 추출
     roi = image[y:y+h, x:x+w].copy()
-
-    # 회전 행렬 생성
     M = cv2.getRotationMatrix2D((w // 2, h // 2), angle, 1.0)
     rotated_roi = cv2.warpAffine(roi, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-
-    # 마스크 생성 (부드러운 경계)
     mask = np.zeros((h, w), dtype=np.uint8)
     cv2.fillConvexPoly(mask, points - [x, y], 255)
     mask = cv2.GaussianBlur(mask, (15, 15), 5)
     mask_3ch = cv2.merge([mask]*3).astype(np.float32) / 255.0
-
-    # 원본 ROI와 회전된 ROI 블렌딩
     roi = roi.astype(np.float32)
     rotated_roi = rotated_roi.astype(np.float32)
     blended = rotated_roi * mask_3ch + roi * (1 - mask_3ch)
     blended = np.clip(blended, 0, 255).astype(np.uint8)
-
-    # 결과 이미지를 복사 후, 해당 영역에 합성
     result = image.copy()
     result[y:y+h, x:x+w] = blended
     return result
@@ -113,20 +102,12 @@ def apply_modification(image, landmarks, modifications):
         if not selected:
             continue
         indexes = FACIAL_REGIONS.get(region_key)
-        if region_key == "볼":
-            for cheek in ["left_cheek", "right_cheek"]:
-                indexes = FACIAL_REGIONS[cheek]
-                scale = REGION_SCALE.get(cheek, 1.0)
-                output = warp_region_with_soft_blend(output, landmarks, indexes, scale)
-            continue
         if indexes is None:
             print(f"[경고] '{region_key}'는 알 수 없는 부위입니다.")
             continue
         scale = REGION_SCALE.get(region_key, 1.0)
         if region_key == "nose":
             output = warp_nose_with_soft_blend(output, landmarks, scale)
-        elif region_key in ["chin", "left_cheek", "right_cheek"]:
-            output = warp_region_with_soft_blend(output, landmarks, indexes, scale)
         else:
             region_coords = [landmarks[i] for i in indexes]
             output = warp_region_tps(output, region_coords, scale=scale)

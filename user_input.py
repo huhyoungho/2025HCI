@@ -3,12 +3,11 @@ def get_user_modifications():
         "눈": ["left_eye", "right_eye"],
         "코": ["nose"],
         "입": ["mouth"],
-        "볼": ["left_cheek", "right_cheek"],
-        "턱": ["chin"]
+        "대두": ["face_shape"]
     }
 
     print("어느 부위를 수정할까요? (복수 선택, 쉼표로 구분)")
-    print("선택 가능: 눈, 코, 입, 볼, 턱")
+    print("선택 가능: 눈, 코, 입, 대두")
 
     while True:
         selected_parts = input("예: 눈,코\n> ").replace(" ", "").split(",")
