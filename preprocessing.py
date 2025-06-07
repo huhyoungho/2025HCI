@@ -23,7 +23,7 @@ def rgb_to_y(image):
     y = np.tensordot(rgb, n, axes=([-1], [0])) + 16
     return y
 
-def color_processing(image, s):
+def color_preprocessing(image, s):
     b, g, r = cv2.split(image)
     Y = rgb_to_y(image)
     #Y_eq = histogram_equalization(Y)
@@ -37,7 +37,7 @@ def color_processing(image, s):
     result = cv2.merge((B, G, R))
     return result
 
-def processing_image(image, s=0.5):
+def preprocessing_image(image, s=0.5):
     # s 파라미터를 받아서 처리
-    return color_processing(image, s)
+    return color_preprocessing(image, s)
 

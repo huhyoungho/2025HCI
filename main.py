@@ -3,7 +3,7 @@ from user_input import get_user_modifications
 from landmark_extraction import extract_landmarks_mediapipe
 from modification import apply_modification, rotate_region, FACIAL_REGIONS
 from cartoon import cartoon_effect
-from processing import processing_image
+from preprocessing import preprocessing_image
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ def main():
 
     modifications, rotate_eyes = get_user_modifications()   # 사용자 입력 받음
     landmarks = extract_landmarks_mediapipe(img)
-    processed_img = processing_image(img, 0.8)
+    processed_img = preprocessing_image(img, 0.8)
     modified_img = apply_modification(processed_img, landmarks, modifications)
 
     # 눈 회전 적용 (사용자가 y/Y 선택 시에만)
