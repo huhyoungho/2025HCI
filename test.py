@@ -39,11 +39,10 @@ def main():
 
     score_eq = emotion_consistency_score(img1, img_eq)
     score_st = emotion_consistency_score(img1, img_st)
+    print(f'Equalization Score: {score_eq:.4f}')
+    print(f'Stretching Score: {score_st:.4f}')
 
     return score_eq, score_st
 
 if __name__ == '__main__':
-    score_eq, score_st = main()
-    if score_eq is not None and score_st is not None:
-        print(f'Equalization Score: {score_eq:.4f}')
-        print(f'Stretching Score: {score_st:.4f}')
+    main()

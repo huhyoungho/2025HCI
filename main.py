@@ -20,8 +20,8 @@ def main():
 
     modifications, rotate_eyes = get_user_modifications()
     landmarks = extract_landmarks_mediapipe(img)
-    processed_img_eq = preprocessing_image_eq(img, 0.8)
-    processed_img_st = preprocessing_image_st(img, 0.8)
+    processed_img_eq = preprocessing_image_eq(img, 0.5)
+    processed_img_st = preprocessing_image_st(img, 0.5)
     modified_img_eq = apply_modification(processed_img_eq, landmarks, modifications)
     modified_img_st = apply_modification(processed_img_st, landmarks, modifications)
 
