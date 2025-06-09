@@ -26,8 +26,7 @@ def rgb_to_y(image):
 def color_preprocessing(image, s):
     b, g, r = cv2.split(image)
     Y = rgb_to_y(image)
-    #Y_eq = histogram_equalization(Y)
-    Y_eq = histogram_stretching(Y)
+    Y_eq = histogram_equalization(Y)
     # 밝기 계수 추가
     brightness_factor = 1.15  # 15% 더 밝게
     Y_eq = np.clip(Y_eq * brightness_factor, 0, 255).astype(np.uint8)
@@ -37,7 +36,7 @@ def color_preprocessing(image, s):
     result = cv2.merge((B, G, R))
     return result
 
-def preprocessing_image(image, s=0.5):
+def preprocessing_image_eq(image, s=0.5):
     # s 파라미터를 받아서 처리
     return color_preprocessing(image, s)
 
