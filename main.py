@@ -1,3 +1,4 @@
+# main.py
 from capture import capture_face_with_guidelines
 from user_input import get_user_modifications
 from landmark_extraction import extract_landmarks_mediapipe
@@ -9,6 +10,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import test  # <- subprocess 대신 직접 import
 
 def main():
     img = capture_face_with_guidelines()
@@ -16,51 +18,54 @@ def main():
         print("⚠️ 캡처 실패 또는 취소되었습니다.")
         return
 
-    modifications, rotate_eyes = get_user_modifications()   # 사용자 입력 받음
+    modifications, rotate_eyes = get_user_modifications()
     landmarks = extract_landmarks_mediapipe(img)
     processed_img_eq = preprocessing_image_eq(img, 0.8)
-    processed_img_st=preprocessing_image_st(img,0.8)
+    processed_img_st = preprocessing_image_st(img, 0.8)
     modified_img_eq = apply_modification(processed_img_eq, landmarks, modifications)
     modified_img_st = apply_modification(processed_img_st, landmarks, modifications)
-    # 눈 회전 적용 (사용자가 y/Y 선택 시에만)
+
     if rotate_eyes:
         modified_img_eq = rotate_region(modified_img_eq, landmarks, FACIAL_REGIONS["left_eye"], 90)
-        modified_img_eq= rotate_region(modified_img_eq, landmarks, FACIAL_REGIONS["right_eye"], -90)
+        modified_img_eq = rotate_region(modified_img_eq, landmarks, FACIAL_REGIONS["right_eye"], -90)
+        modified_img_st = rotate_region(modified_img_st, landmarks, FACIAL_REGIONS["left_eye"], 90)
+        modified_img_st = rotate_region(modified_img_st, landmarks, FACIAL_REGIONS["right_eye"], -90)
 
-        modified_img_st= rotate_region(modified_img_st, landmarks, FACIAL_REGIONS["left_eye"], 90)
-        modified_img_st= rotate_region(modified_img_st, landmarks, FACIAL_REGIONS["right_eye"], -90)
+    cartooned_eq = cartoon_effect(modified_img_eq)
+    cartooned_st = cartoon_effect(modified_img_st)
 
-    cartooned_eq= cartoon_effect(modified_img_eq)
-    cartooned_st= cartoon_effect(modified_img_st)
-    # 원본, 결과 이미지 저장 경로 지정
     origin_dir = 'assets/origin'
-    result_dir_eq = 'assets/result'
-    result_dir_st='assets/result'
+    result_dir = 'assets/result'
     os.makedirs(origin_dir, exist_ok=True)
-    os.makedirs(result_dir_eq, exist_ok=True)
-    os.makedirs(result_dir_st, exist_ok=True)
+    os.makedirs(result_dir, exist_ok=True)
     origin_path = os.path.join(origin_dir, 'origin.png')
-    result_path_eq = os.path.join(result_dir_eq, 'result_eq.png')
-    result_path_st= os.path.join(result_dir_st, 'result_st.png')
+    result_path_eq = os.path.join(result_dir, 'result_eq.png')
+    result_path_st = os.path.join(result_dir, 'result_st.png')
 
-    # 원본 저장
     cv2.imwrite(origin_path, img)
-    # 결과 저장
     cv2.imwrite(result_path_eq, cartooned_eq)
     cv2.imwrite(result_path_st, cartooned_st)
 
-    # 결과 출력
-    plt.figure(figsize=(8, 8))
-    plt.subplot(1, 2, 1)
-    plt.imshow(cv2.cvtColor(cartooned_eq, cv2.COLOR_BGR2RGB))
-    plt.title("Histogram_Equaliztion")
-    plt.axis('off')
+    # 감정 유사도 점수 계산
+    score_eq, score_st = test.main()
+    print(f"Equalization Score: {score_eq}, Stretching Score: {score_st}")
 
-    plt.subplot(1, 2, 2)
-    plt.imshow(cv2.cvtColor(cartooned_st, cv2.COLOR_BGR2RGB))
-    plt.title("Histogram_Stretching")
-    plt.axis('off')
-    plt.show()
+    # 더 높은 점수를 받은 이미지를 출력
+    if score_eq is not None and score_st is not None:
+        if score_eq >= score_st:
+            best_img = cartooned_eq
+            best_title = "Best: Histogram Equalization"
+        else:
+            best_img = cartooned_st
+            best_title = "Best: Histogram Stretching"
+
+        plt.figure(figsize=(6, 6))
+        plt.imshow(cv2.cvtColor(best_img, cv2.COLOR_BGR2RGB))
+        plt.title(best_title)
+        plt.axis('off')
+        plt.show()
+    else:
+        print("⚠️ 감정 점수를 비교할 수 없습니다.")
 
 if __name__ == "__main__":
     main()
